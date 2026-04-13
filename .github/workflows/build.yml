@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - run: |
+        echo "Building LAB1"
+        cd "LAB1"
+        cmake -B build
+        cmake --build build
+
+    - run: | 
+        echo "Building LAB2_training"
+        cd "LAB2_training"
+        cmake -B build
+        cmake --build build
+
+    - run: |
+        echo "Building LAB2"
+        cd "LAB2"
+        cmake -B build
+        cmake --build build
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - run: |
+        echo "Building LAB1"
+        cd "LAB1"
+        cmake -B build
+        cmake --build build
+
+    - run: | 
+        echo "Building LAB2_training"
+        cd "LAB2_training"
+        cmake -B build
+        cmake --build build
+
+    - run: |
+        echo "Building LAB2"
+        cd "LAB2"
+        cmake -B build
+        cmake --build build
+  build-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev wayland-protocols libwayland-dev libwayland-bin libxkbcommon-dev libglu1-mesa-dev
+
+    - run: |
+        echo "Building LAB1"
+        cd "LAB1"
+        cmake -B build
+        cmake --build build
+
+    - run: | 
+        echo "Building LAB2_training"
+        cd "LAB2_training"
+        cmake -B build
+        cmake --build build
+
+    - run: |
+        echo "Building LAB2"
+        cd "LAB2"
+        cmake -B build
+        cmake --build build
+        
+
+      
