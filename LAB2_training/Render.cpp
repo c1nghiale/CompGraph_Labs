@@ -158,22 +158,26 @@ void Prism() {
 
     //Basement
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A, B, C);
     glBegin(GL_TRIANGLES);
     glVertex3dv(A); glVertex3dv(B); glVertex3dv(C);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(B, C, D);
     glBegin(GL_TRIANGLES);
     glVertex3dv(B); glVertex3dv(C); glVertex3dv(D);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A, B, H);
     glBegin(GL_QUADS);
     glVertex3dv(A); glVertex3dv(B);
     glVertex3dv(H); glVertex3dv(G);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A, C, E);
     glBegin(GL_QUADS);
     glVertex3dv(A); glVertex3dv(C);
     glVertex3dv(E); glVertex3dv(F);
@@ -181,22 +185,26 @@ void Prism() {
 
     //Cover
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A1, B1, C1);
     glBegin(GL_TRIANGLES);
     glVertex3dv(A1); glVertex3dv(B1); glVertex3dv(C1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(B1, C1, D1);
     glBegin(GL_TRIANGLES);
     glVertex3dv(B1); glVertex3dv(C1); glVertex3dv(D1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A1, B1, H1);
     glBegin(GL_QUADS);
     glVertex3dv(A1); glVertex3dv(B1);
     glVertex3dv(H1); glVertex3dv(G1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A1, C1, E1);
     glBegin(GL_QUADS);
     glVertex3dv(A1); glVertex3dv(C1);
     glVertex3dv(E1); glVertex3dv(F1);
@@ -204,30 +212,35 @@ void Prism() {
 
     //Walls
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(G, H, H1);
     glBegin(GL_QUADS);
     glVertex3dv(G); glVertex3dv(H);
     glVertex3dv(H1); glVertex3dv(G1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(H, B, B1);
     glBegin(GL_QUADS);
     glVertex3dv(H); glVertex3dv(B);
     glVertex3dv(B1); glVertex3dv(H1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(B, D, D1);
     glBegin(GL_QUADS);
     glVertex3dv(B); glVertex3dv(D);
     glVertex3dv(D1); glVertex3dv(B1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(D, C, C1);
     glBegin(GL_QUADS);
     glVertex3dv(D); glVertex3dv(C);
     glVertex3dv(C1); glVertex3dv(D1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(C, E, E1);
     glBegin(GL_QUADS);
     glVertex3dv(C); glVertex3dv(E);
     glVertex3dv(E1); glVertex3dv(C1);
@@ -240,12 +253,14 @@ void Prism() {
     glEnd()*/
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(F, A, A1);
     glBegin(GL_QUADS);
     glVertex3dv(F); glVertex3dv(A);
     glVertex3dv(A1); glVertex3dv(F1);
     glEnd();
 
     glColor3d(r(gen), r(gen), r(gen));
+    SetNormals(A, G, G1);
     glBegin(GL_QUADS);
     glVertex3dv(A); glVertex3dv(G);
     glVertex3dv(G1); glVertex3dv(A1);
