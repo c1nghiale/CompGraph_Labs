@@ -4,16 +4,17 @@
 
 class Camera
 {
-    double camDist = 10;
+    double m_camDist = 10;
 
-    int camNz = 1;
+    int m_camNz = 1;
 
-    double camX;
-    double camY;
-    double camZ;
-    int mouseX = -1, mouseY = -1;
+    double m_camX;
+    double m_camY;
+    double m_camZ;
+    int m_mouseX = -1, m_mouseY = -1;
 
-    bool drag = false;
+    bool m_drag = false;
+
 
   public:
     // Начальные углы камеры
@@ -29,24 +30,24 @@ class Camera
 
     double distance()
     {
-        return camDist;
+        return m_camDist;
     }
 
     int nZ() const
     {
-        return camNz;
+        return m_camNz;
     }
     double x() const
     {
-        return camX;
+        return m_camX;
     }
     double y() const
     {
-        return camY;
+        return m_camY;
     }
     double z() const
     {
-        return camZ;
+        return m_camZ;
     }
     double fi1() const
     {
@@ -63,21 +64,21 @@ class Camera
 
     void MouseLeave(OpenGL* sender, MouseEventArg arg)
     {
-        mouseX = 0;
+        m_mouseX = 0;
     }
 
     void MouseStartDrag(OpenGL* sender, const MouseButtonEventArg &arg)
     {
         if (arg.button == GLFW_MOUSE_BUTTON_LEFT && arg.action == GLFW_PRESS)
-            drag = true;
+            m_drag = true;
         if (arg.button == GLFW_MOUSE_BUTTON_LEFT && arg.action == GLFW_RELEASE)
         {
-            drag = false;
-            mouseX = 0;
+            m_drag = false;
+            m_mouseX = 0;
         }
     }
 
 
 
-    void SetUpCamera();
+    void ApplyCamera();
 };

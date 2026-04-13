@@ -30,8 +30,6 @@ struct KeyEventArg
 
 class OpenGL
 {
-	bool render_flag;
-
 	int m_window_width;
 	int m_window_height;
 
@@ -39,6 +37,8 @@ class OpenGL
 	int m_framebuffer_height;
 
 	GLFWwindow* m_window;
+
+	double m_old_time = 0;
 
 	Event<OpenGL*, const MouseEventArg&> m_mouseMoveEvent;
 	Event<OpenGL*, const MouseWheelEventArg&> m_wheelEvent;
@@ -55,9 +55,6 @@ class OpenGL
 	void PreRender();
 	void resize();
 
-	void drawAxisAndCell();
-	
-	double old_time = 0;
 
 public:
 
@@ -69,11 +66,28 @@ public:
 
 	void initWindow();
 
+	int window_height(){ return m_window_height; }
+	int window_width() { return m_window_height; }
 
 	
-
+	bool isKeyPressed(int key)
+	{
+	
+		if (key == GLFW_MOUSE_BUTTON_1 || 
+			key == GLFW_MOUSE_BUTTON_2 || 
+			key == GLFW_MOUSE_BUTTON_3 ||
+			key == GLFW_MOUSE_BUTTON_4 ||
+			key == GLFW_MOUSE_BUTTON_5 ||
+			key == GLFW_MOUSE_BUTTON_6 ||
+			key == GLFW_MOUSE_BUTTON_7 ||
+			key == GLFW_MOUSE_BUTTON_8 
+			)
+			return glfwGetMouseButton(m_window, key) == GLFW_PRESS;
+		else
+			return glfwGetKey(m_window, key) == GLFW_PRESS;
+	}
 	void Render();
-
+	void drawAxisAndCell();
 	
 
 };

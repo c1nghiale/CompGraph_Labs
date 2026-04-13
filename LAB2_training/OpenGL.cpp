@@ -6,6 +6,7 @@
 //пользовательская функция рендера
 
 void Render(double);
+void InitRender();
 
 void OpenGL::window_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -27,7 +28,9 @@ void OpenGL::cursor_position_callback(GLFWwindow* window, double xpos, double yp
     if (!ogl)
         throw std::runtime_error("UserPointer ig glwfWindow updefined!");
 
-    MouseEventArg a{ a.x = (int)xpos, a.y = (int) ypos};
+    MouseEventArg a{ a.x = (int)(xpos / (ogl->m_window_width-1) * ogl->m_framebuffer_width), 
+        a.y = (int) (ypos / (ogl->m_window_height-1) * ogl->m_framebuffer_height )};
+
     ogl->m_mouseMoveEvent.exec(ogl, a);
 }
 
@@ -71,8 +74,11 @@ void OpenGL::initWindow()
 
     m_window_height = 720;
     m_window_width = 1280;
+
+    //фикс размеров под ретины на маках
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, true);
     
-    m_window = glfwCreateWindow(m_window_width, m_window_height, "Компьютерная графика 1", NULL, NULL);
+    m_window = glfwCreateWindow(m_window_width, m_window_height, "Компьютерная графика 2", NULL, NULL);
     if (!m_window)
     {
         glfwTerminate();
@@ -88,7 +94,6 @@ void OpenGL::initWindow()
     glfwSetCursorPosCallback(m_window, cursor_position_callback);
     glfwSetScrollCallback(m_window, scroll_callback);
     glfwSetMouseButtonCallback(m_window, mouse_button_callback);
-
     glfwSetKeyCallback(m_window, key_callback);
 
     /* Make the window's context current */
@@ -96,19 +101,12 @@ void OpenGL::initWindow()
     resize();
 }
 
-Camera* c;
+
 
 void OpenGL::PreRender()
 {
-    c = new Camera();
-    
-
-    mouseMoveEvent().reaction(c, &Camera::MouseMovie);
-    wheelEvent().reaction(c, &Camera::Zoom);
-    mouseButtonEvent().reaction(c, &Camera::MouseStartDrag);
-    
-   
     glClearColor(0.7, 0.7, 0.7, 0);
+    InitRender();
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -116,62 +114,23 @@ void OpenGL::PreRender()
 void OpenGL::Render()
 {
     PreRender();
-    old_time = 0;
+    m_old_time = 0;
+    
 
     while (!glfwWindowShouldClose(m_window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        c->SetUpCamera();
-
-        GLfloat line_width;
-        glGetFloatv(GL_LINE_WIDTH, &line_width);
-
-        glColor3d(0.2, 0.2, 0.2);
-        glLineWidth(1);
-
-        glBegin(GL_LINES);
-        for (int i = -10; i <= 10; ++i)
-        {
-            glVertex2d(-10, i);
-            glVertex2d(10, i);
-            glVertex2d(i, -10);
-            glVertex2d(i, 10);
-        }
-        glEnd();
-
-        glLineWidth(3);
-
-        glColor3d(1, 0, 0);
-        glBegin(GL_LINES);
-        glVertex3d(0, 0, 0);
-        glVertex3d(10, 0, 0);
-        glEnd();
-
-        glColor3d(0, 1, 0);
-        glBegin(GL_LINES);
-        glVertex3d(0, 0, 0);
-        glVertex3d(0, 10, 0);
-        glEnd();
-
-        glColor3d(0, 0, 1);
-        glBegin(GL_LINES);
-        glVertex3d(0, 0, 0);
-        glVertex3d(0, 0, 10);
-        glEnd();
-        
-        glLineWidth(line_width);
-
+                
         glColor3d(0,0,0);
-         
-
+        
 
         auto time = glfwGetTime();
 
-        ::Render(time - old_time );
+        ::Render(time - m_old_time );
 
-        old_time = time;
+        m_old_time = time;
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
@@ -179,6 +138,54 @@ void OpenGL::Render()
         /* Poll for and process events */
         glfwPollEvents();
     }
+}
+
+void OpenGL::drawAxisAndCell()
+{
+    glEnable(GL_SMOOTH);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+
+
+    GLfloat line_width;
+    glGetFloatv(GL_LINE_WIDTH, &line_width);
+
+    glColor3d(0.2, 0.2, 0.2);
+    glLineWidth(1);
+
+    glBegin(GL_LINES);
+    for (int i = -10; i <= 10; ++i)
+    {
+        glVertex2d(-10, i);
+        glVertex2d(10, i);
+        glVertex2d(i, -10);
+        glVertex2d(i, 10);
+    }
+    glEnd();
+
+    glLineWidth(3);
+
+    glColor3d(1, 0, 0);
+    glBegin(GL_LINES);
+    glVertex3d(0, 0, 0);
+    glVertex3d(10, 0, 0);
+    glEnd();
+
+    glColor3d(0, 1, 0);
+    glBegin(GL_LINES);
+    glVertex3d(0, 0, 0);
+    glVertex3d(0, 10, 0);
+    glEnd();
+
+    glColor3d(0, 0, 1);
+    glBegin(GL_LINES);
+    glVertex3d(0, 0, 0);
+    glVertex3d(0, 0, 10);
+    glEnd();
+
+    glLineWidth(line_width);
+
 }
 
 void OpenGL::resize()
