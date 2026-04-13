@@ -61,7 +61,7 @@ void Render(double delta_time)
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    float lightPos[] = { 0, 0, 10, 1 };
+    float lightPos[] = { 5.0f, 10.0f, 10.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
     glMatrixMode(GL_MODELVIEW);
@@ -136,23 +136,25 @@ void semiCircleArc() {
 void Prism() {
     std::mt19937 gen(time(nullptr));
     std::uniform_real_distribution<double> r(0.0, 1.0);
-    double A[]{ -1, 0, 0 };
-    double B[]{ 2, 0, 0 };
-    double C[]{ 0, 0, 1 };
-    double D[]{ 7, 0, 5 };
-    double E[]{ -5, 0, 8 };
-    double F[]{ -8, 0, 4 };
-    double G[]{ -3, 0, -9 };
-    double H[]{ 6, 0, -7 };
+    // Нижнее основание (Y = 0) с микро-сдвигом для предотвращения мерцания
+        double A[]{ -1, 0.0001, 0 };
+        double B[]{ 2, 0.0002, 0 };
+        double C[]{ 0, 0.0003, 1 };
+        double D[]{ 7, 0.0004, 5 };
+        double E[]{ -5, 0.0005, 8 };
+        double F[]{ -8, 0.0006, 4 };
+        double G[]{ -3, 0.0007, -9 };
+        double H[]{ 6, 0.0008, -7 };
 
-    double A1[]{ -1, 5, 0 };
-    double B1[]{ 2, 5, 0 };
-    double C1[]{ 0, 5, 1 };
-    double D1[]{ 7, 5, 5 };
-    double E1[]{ -5, 5, 8 };
-    double F1[]{ -8, 5, 4 };
-    double G1[]{ -3, 5, -9 };
-    double H1[]{ 6, 5, -7 };
+        // Верхнее основание (Y = 5) с микро-сдвигом
+        double A1[]{ -1, 5.0001, 0 };
+        double B1[]{ 2, 5.0002, 0 };
+        double C1[]{ 0, 5.0003, 1 };
+        double D1[]{ 7, 5.0004, 5 };
+        double E1[]{ -5, 5.0005, 8 };
+        double F1[]{ -8, 5.0006, 4 };
+        double G1[]{ -3, 5.0007, -9 };
+        double H1[]{ 6, 5.0008, -7 };
 
     //Basement
     glColor3d(r(gen), r(gen), r(gen));
