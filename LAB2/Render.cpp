@@ -149,7 +149,6 @@ void Render(double delta_time)
     light.DrawLightGizmo();
 }
 
-// Вспомогательная функция для отрисовки треугольника с автоматическим вычислением нормали
 void DrawTriangle(const double* v0, const double* v1, const double* v2, const double* center) {
     SetNormals(v0, v1, v2, center);
     glVertex3dv(v0);
@@ -157,18 +156,15 @@ void DrawTriangle(const double* v0, const double* v1, const double* v2, const do
     glVertex3dv(v2);
 }
 
-// Вспомогательная функция для отрисовки квада (разбивает на два треугольника)
 void DrawQuad(const double* v0, const double* v1, const double* v2, const double* v3, const double* center) {
     DrawTriangle(v0, v1, v2, center);
     DrawTriangle(v0, v2, v3, center);
 }
 
 void SetNormals(const double *v0, const double *v1, const double *v2, const double * /*objCenter*/) {
-    // objCenter больше не используется – разворот нормали отключён.
     double ax = v1[0] - v0[0], ay = v1[1] - v0[1], az = v1[2] - v0[2];
     double bx = v2[0] - v0[0], by = v2[1] - v0[1], bz = v2[2] - v0[2];
 
-    // Векторное произведение (порядок: v0→v1 × v0→v2)
     double nx = ay * bz - az * by;
     double ny = az * bx - ax * bz;
     double nz = ax * by - ay * bx;
@@ -180,7 +176,6 @@ void SetNormals(const double *v0, const double *v1, const double *v2, const doub
         nz /= len;
         glNormal3d(nx, ny, nz);
     } else {
-        // Для вырожденного треугольника задаём заглушку
         glNormal3d(0.0, 1.0, 0.0);
     }
 }
@@ -194,7 +189,7 @@ void Prism() {
 
     double prismCenter[] = {0.0, 2.5, 0.0};
 
-    // Нижнее основание (два треугольника)
+    // Нижнее основание
     glBegin(GL_TRIANGLES);
         DrawTriangle(A, B, C, prismCenter);
         DrawTriangle(B, C, D, prismCenter);
@@ -210,7 +205,7 @@ void Prism() {
         DrawQuad(A1, C1, E1, F1, prismCenter);
     glEnd();
 
-    // Боковые стены (квады, разбитые на треугольники)
+    // Боковые стены
     glBegin(GL_TRIANGLES);
         DrawQuad(G, H, H1, G1, prismCenter);
         DrawQuad(H, B, B1, H1, prismCenter);
@@ -222,7 +217,6 @@ void Prism() {
     glEnd();
 }
 
-// Константы или параметры цилиндра, чтобы не дублировать код
 struct CilinderParams {
     double Ax = -6.5, Ay = 0, Az = 6;
     double height = 5.0005;
@@ -231,7 +225,6 @@ struct CilinderParams {
     int steps = 180;
 };
 
-// 1. Боковая поверхность
 void DrawCilinderSides(const CilinderParams& p) {
     glBegin(GL_TRIANGLES);
     for (int i = 0; i < p.steps; ++i) {
@@ -258,7 +251,6 @@ void DrawCilinderSides(const CilinderParams& p) {
     glEnd();
 }
 
-// 2. Универсальная функция для крышек (верх/низ)
 void DrawCilinderCap(const CilinderParams& p, bool isTop) {
     double currentY = isTop ? (p.Ay + p.height) : p.Ay;
     double normalY = isTop ? 1.0 : -1.0;
@@ -277,11 +269,9 @@ void DrawCilinderCap(const CilinderParams& p, bool isTop) {
     glEnd();
 }
 
-// Главная функция Cilinder теперь очень простая
 void Cilinder() {
     CilinderParams p;
 
-    // Вычисляем углы один раз
     double x_start = -5.0, z_start = 8.0;
     double x_end = -7.25, z_end = 5.0;
 
@@ -291,7 +281,6 @@ void Cilinder() {
     if (p.endAngle < p.startAngle) p.endAngle += 2.0 * M_PI;
     p.delta = (p.endAngle - p.startAngle) / double(p.steps);
 
-    // Вызываем части по отдельности
     DrawCilinderSides(p);     // Стенки
     DrawCilinderCap(p, false); // Низ
     DrawCilinderCap(p, true);  // Верх
