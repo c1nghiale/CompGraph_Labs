@@ -12,10 +12,8 @@
 #endif
 
 void Prism();
-void quarterCilinder1();
-void quarterCilinder2();
+void Cilinder();
 void SetNormals(const double *v0, const double *v1, const double *v2, const double *objCenter);
-void semiCircleArc();
 
 static double default_center[3] = {0.0, 0.0, 0.0};
 
@@ -93,7 +91,7 @@ void InitRender()
     ogl_object->mouseButtonEvent().reaction(&camera, &Camera::MouseStartDrag);
     ogl_object->keyEvent().reaction(&SwitchMode);
 
-    light.SetPosition(1, 10, 3);
+    light.SetPosition(1, 15, 3);
     ogl_object->mouseMoveEvent().reaction(&light, &Light::MoveLight);
     ogl_object->keyEvent().reaction(&light, &Light::KeyPressed);
 
@@ -143,7 +141,10 @@ void Render(double delta_time)
     glPushMatrix();
            glRotated(90.0, 1.0, 0.0, 0.0); // положить призму на бок
            Prism();
+           Cilinder();
     glPopMatrix();
+
+
 
     light.DrawLightGizmo();
 }
@@ -162,12 +163,34 @@ void DrawQuad(const double* v0, const double* v1, const double* v2, const double
     DrawTriangle(v0, v2, v3, center);
 }
 
-void Prism() {
-    double A[] = {-1, 0.0001, 0}, B[] = {2, 0.0002, 0}, C[] = {0, 0.0003, 1}, D[] = {7, 0.0004, 5},
-           E[] = {-5, 0.0005, 8}, F[] = {-8, 0.0006, 4}, G[] = {-3, 0.0007, -9}, H[] = {6, 0.0008, -7};
+void SetNormals(const double *v0, const double *v1, const double *v2, const double * /*objCenter*/) {
+    // objCenter больше не используется – разворот нормали отключён.
+    double ax = v1[0] - v0[0], ay = v1[1] - v0[1], az = v1[2] - v0[2];
+    double bx = v2[0] - v0[0], by = v2[1] - v0[1], bz = v2[2] - v0[2];
 
-    double A1[] = {-1, 5.0001, 0}, B1[] = {2, 5.0002, 0}, C1[] = {0, 5.0003, 1}, D1[] = {7, 5.0004, 5},
-           E1[] = {-5, 5.0005, 8}, F1[] = {-8, 5.0006, 4}, G1[] = {-3, 5.0007, -9}, H1[] = {6, 5.0008, -7};
+    // Векторное произведение (порядок: v0→v1 × v0→v2)
+    double nx = ay * bz - az * by;
+    double ny = az * bx - ax * bz;
+    double nz = ax * by - ay * bx;
+
+    double len = sqrt(nx * nx + ny * ny + nz * nz);
+    if (len > 1e-9) {
+        nx /= len;
+        ny /= len;
+        nz /= len;
+        glNormal3d(nx, ny, nz);
+    } else {
+        // Для вырожденного треугольника задаём заглушку
+        glNormal3d(0.0, 1.0, 0.0);
+    }
+}
+
+void Prism() {
+    double A[] = {-1, 0.0001, 0}, B[] = {2, 0.0002, 0}, C[] = {0, 0.0003, 1}, D[] = {7, 0.0004, 5};
+    double E[] = {-5, 0.0005, 8}, F[] = {-8, 0.0006, 4}, G[] = {-3, 0.0007, -9}, H[] = {6, 0.0008, -7};
+
+    double A1[] = {-1, 5.0001, 0}, B1[] = {2, 5.0002, 0}, C1[] = {0, 5.0003, 1}, D1[] = {7, 5.0004, 5};
+    double E1[] = {-5, 5.0005, 8}, F1[] = {-8, 5.0006, 4}, G1[] = {-3, 5.0007, -9}, H1[] = {6, 5.0008, -7};
 
     double prismCenter[] = {0.0, 2.5, 0.0};
 
@@ -197,245 +220,79 @@ void Prism() {
         DrawQuad(F, A, A1, F1, prismCenter);
         DrawQuad(A, G, G1, A1, prismCenter);
     glEnd();
-
-    quarterCilinder1();
-    quarterCilinder2();
-    semiCircleArc();
 }
 
-void quarterCilinder1() {
+// Константы или параметры цилиндра, чтобы не дублировать код
+struct CilinderParams {
     double Ax = -6.5, Ay = 0, Az = 6;
-    double Bx = -5,   By = 0, Bz = 8;
-    double height = 5;
-    double cx = -6.5, cz = 6;
-
+    double height = 5.0005;
+    double realRadius = 2.5;
+    double startAngle, endAngle, delta;
     int steps = 180;
-    double angleStep = M_PI / steps;
+};
 
-    for (int i = 0; i < steps; i++) {
-        double a1 = i * angleStep;
-        double a2 = (i + 1) * angleStep;
+// 1. Боковая поверхность
+void DrawCilinderSides(const CilinderParams& p) {
+    glBegin(GL_TRIANGLES);
+    for (int i = 0; i < p.steps; ++i) {
+        double a1 = p.startAngle + p.delta * i;
+        double a2 = p.startAngle + p.delta * (i + 1);
+        if (i == p.steps - 1) a2 = p.endAngle;
 
-        double cos1 = cos(a1), sin1 = sin(a1);
-        double x1 = cx + (Ax - cx) * cos1 - (Az - cz) * sin1;
-        double z1 = cz + (Ax - cx) * sin1 + (Az - cz) * cos1;
-        double x2 = cx + (Bx - cx) * cos1 - (Bz - cz) * sin1;
-        double z2 = cz + (Bx - cx) * sin1 + (Bz - cz) * cos1;
+        double x1 = p.realRadius * cos(a1) + p.Ax;
+        double z1 = p.realRadius * sin(a1) + p.Az;
+        double x2 = p.realRadius * cos(a2) + p.Ax;
+        double z2 = p.realRadius * sin(a2) + p.Az;
 
-        double cos2 = cos(a2), sin2 = sin(a2);
-        double x1n = cx + (Ax - cx) * cos2 - (Az - cz) * sin2;
-        double z1n = cz + (Ax - cx) * sin2 + (Az - cz) * cos2;
-        double x2n = cx + (Bx - cx) * cos2 - (Bz - cz) * sin2;
-        double z2n = cz + (Bx - cx) * sin2 + (Bz - cz) * cos2;
+        double p1_low[] = {x1, p.Ay, z1};
+        double p2_low[] = {x2, p.Ay, z2};
+        double p1_up[]  = {x1, p.Ay + p.height, z1};
+        double p2_up[]  = {x2, p.Ay + p.height, z2};
 
-        glBegin(GL_TRIANGLES);
+        SetNormals(p1_low, p2_low, p1_up, nullptr);
+        glVertex3dv(p1_low); glVertex3dv(p2_low); glVertex3dv(p1_up);
 
-        // Боковая поверхность (радиальная нормаль)
-        double nx, nz, len;
-
-        // Верхний треугольник боковины
-        nx = x2 - cx; nz = z2 - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2, By + height, z2);
-
-        nx = x2n - cx; nz = z2n - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2n, By + height, z2n);
-
-        nx = x2 - cx; nz = z2 - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2, By, z2);
-
-        // Нижний треугольник боковины
-        nx = x2n - cx; nz = z2n - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2n, By + height, z2n);
-
-        nx = x2n - cx; nz = z2n - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2n, By, z2n);
-
-        nx = x2 - cx; nz = z2 - cz;
-        len = sqrt(nx*nx + nz*nz);
-        if (len > 1e-9) { nx /= len; nz /= len; }
-        glNormal3d(nx, 0.0, nz);
-        glVertex3d(x2, By, z2);
-
-        // Нижнее основание
-        glNormal3d(0.0, -1.0, 0.0);
-        glVertex3d(x1, Ay, z1);
-        glVertex3d(x2, By, z2);
-        glVertex3d(x2n, By, z2n);
-
-        // Верхнее основание
-        glNormal3d(0.0, 1.0, 0.0);
-        glVertex3d(x1, Ay + height, z1);
-        glVertex3d(x2n, By + height, z2n);
-        glVertex3d(x2, By + height, z2);
-
-        glEnd();
-    }
-}
-
-void quarterCilinder2() {
-    double Ax = -6.5, Ay = 5, Az = 6;
-    double Bx = -5,   By = 5, Bz = 8;
-    double height = -5;
-    double cx = -6.5, cz = 6;
-
-    double Ccx = -6.5, Ccy = 2.5, Ccz = 6;
-    double prismCenter[] = {0.0, 2.5, 0.0};  // общий центр объекта
-
-    int steps = 180;
-    double angleStep = M_PI / steps;
-
-    for (int i = 0; i < steps; i++) {
-        double a1 = i * angleStep;
-        double a2 = (i + 1) * angleStep;
-
-        double cos1 = cos(a1), sin1 = sin(a1);
-        double x1 = cx + (Ax - cx) * cos1 - (Az - cz) * sin1;
-        double z1 = cz + (Ax - cx) * sin1 + (Az - cz) * cos1;
-        double x2 = cx + (Bx - cx) * cos1 - (Bz - cz) * sin1;
-        double z2 = cz + (Bx - cx) * sin1 + (Bz - cz) * cos1;
-
-        double cos2 = cos(a2), sin2 = sin(a2);
-        double x1n = cx + (Ax - cx) * cos2 - (Az - cz) * sin2;
-        double z1n = cz + (Ax - cx) * sin2 + (Az - cz) * cos2;
-        double x2n = cx + (Bx - cx) * cos2 - (Bz - cz) * sin2;
-        double z2n = cz + (Bx - cx) * sin2 + (Bz - cz) * cos2;
-
-        glBegin(GL_TRIANGLES);
-
-        // Грань вдоль стороны AB (нижнее основание)
-        {
-            double v0[] = {x1, Ay, z1};
-            double v1[] = {x2, By, z2};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2, By, z2};
-            double v1[] = {x2n, By, z2n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2n, By, z2n};
-            double v1[] = {x1n, Ay, z1n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x1n, Ay, z1n};
-            double v1[] = {x1, Ay, z1};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-
-        // Грань вдоль стороны с высотой (внутренняя боковая)
-        {
-            double v0[] = {x2, By, z2};
-            double v1[] = {x2, By + height, z2};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2, By + height, z2};
-            double v1[] = {x2n, By + height, z2n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2n, By + height, z2n};
-            double v1[] = {x2n, By, z2n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-
-        // Грань от вершины A до верхней точки
-        {
-            double v0[] = {x1, Ay, z1};
-            double v1[] = {x2, By + height, z2};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2, By + height, z2};
-            double v1[] = {x2n, By + height, z2n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-        {
-            double v0[] = {x2n, By + height, z2n};
-            double v1[] = {x1n, Ay, z1n};
-            double v2[] = {Ccx, Ccy, Ccz};
-            SetNormals(v0, v1, v2, prismCenter);
-            glVertex3dv(v0); glVertex3dv(v1); glVertex3dv(v2);
-        }
-
-        glEnd();
-    }
-}
-
-void SetNormals(const double *v0, const double *v1, const double *v2, const double * /*objCenter*/) {
-    // objCenter больше не используется – разворот нормали отключён.
-    double ax = v1[0] - v0[0], ay = v1[1] - v0[1], az = v1[2] - v0[2];
-    double bx = v2[0] - v0[0], by = v2[1] - v0[1], bz = v2[2] - v0[2];
-
-    // Векторное произведение (порядок: v0→v1 × v0→v2)
-    double nx = ay * bz - az * by;
-    double ny = az * bx - ax * bz;
-    double nz = ax * by - ay * bx;
-
-    double len = sqrt(nx * nx + ny * ny + nz * nz);
-    if (len > 1e-9) {
-        nx /= len;
-        ny /= len;
-        nz /= len;
-        glNormal3d(nx, ny, nz);
-    } else {
-        // Для вырожденного треугольника задаём заглушку
-        glNormal3d(0.0, 1.0, 0.0);
-    }
-}
-
-void semiCircleArc() {
-    double P0x = -8, P0y = 0, P0z = 4;
-    double Cx = -6.5, Cy = 0, Cz = 6;
-    double P2x = -5, P2y = 0, P2z = 8;
-
-    double radius = sqrt((P0x - Cx)*(P0x - Cx) + (P0z - Cz)*(P0z - Cz));
-    double angleStart = atan2(P0z - Cz, P0x - Cx);
-    int steps = 100;
-
-    glBegin(GL_LINE_STRIP);
-    for (int i = 0; i <= steps; i++) {
-        double t = (double)i / steps;
-        double angle = angleStart - t * M_PI;
-        double x = Cx + radius * cos(angle);
-        double y = Cy;
-        double z = Cz + radius * sin(angle);
-        glVertex3d(x, y, z);
+        SetNormals(p2_low, p2_up, p1_up, nullptr);
+        glVertex3dv(p2_low); glVertex3dv(p2_up); glVertex3dv(p1_up);
     }
     glEnd();
+}
+
+// 2. Универсальная функция для крышек (верх/низ)
+void DrawCilinderCap(const CilinderParams& p, bool isTop) {
+    double currentY = isTop ? (p.Ay + p.height) : p.Ay;
+    double normalY = isTop ? 1.0 : -1.0;
+
+    glNormal3d(0.0, normalY, 0.0);
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3d(p.Ax, currentY, p.Az); // Центр
+        for (int i = 0; i <= p.steps; ++i) {
+            double a = p.startAngle + p.delta * i;
+            if (i == p.steps) a = p.endAngle;
+
+            double x = p.realRadius * cos(a) + p.Ax;
+            double z = p.realRadius * sin(a) + p.Az;
+            glVertex3d(x, currentY, z);
+        }
+    glEnd();
+}
+
+// Главная функция Cilinder теперь очень простая
+void Cilinder() {
+    CilinderParams p;
+
+    // Вычисляем углы один раз
+    double x_start = -5.0, z_start = 8.0;
+    double x_end = -7.25, z_end = 5.0;
+
+    p.startAngle = atan2(z_start - p.Az, x_start - p.Ax);
+    p.endAngle   = atan2(z_end - p.Az, x_end - p.Ax);
+
+    if (p.endAngle < p.startAngle) p.endAngle += 2.0 * M_PI;
+    p.delta = (p.endAngle - p.startAngle) / double(p.steps);
+
+    // Вызываем части по отдельности
+    DrawCilinderSides(p);     // Стенки
+    DrawCilinderCap(p, false); // Низ
+    DrawCilinderCap(p, true);  // Верх
 }
